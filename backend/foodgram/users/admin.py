@@ -4,7 +4,7 @@ from .models import Subscription, User
 
 
 class UserAdmin(admin.ModelAdmin):
-    """Class to customize Users display in admin panel."""
+    """Class to customize users display in admin panel."""
 
     list_display = [
         'pk', 'username', 'email', 'first_name', 'last_name',
@@ -15,7 +15,7 @@ class UserAdmin(admin.ModelAdmin):
 
 
 class SubscriptionAdmin(admin.ModelAdmin):
-    """Class to customize Subscriptions display in admin panel."""
+    """Class to customize subscriptions display in admin panel."""
 
     list_display = ['user', 'author']
     search_fields = ['user', 'author']

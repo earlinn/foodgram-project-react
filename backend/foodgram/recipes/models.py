@@ -52,6 +52,7 @@ class Recipe(models.Model):
     image = models.ImageField('Image', upload_to='recipes/')
     text = models.TextField('Text')
     cooking_time = models.PositiveIntegerField('Cooking time')
+    pub_date = models.DateTimeField('Publication Date', auto_now_add=True)
 
     class Meta:
         verbose_name = 'Recipe'
