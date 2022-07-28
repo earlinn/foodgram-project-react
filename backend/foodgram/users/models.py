@@ -4,6 +4,7 @@ from django.db import models
 
 class User(AbstractUser):
     """Class to store users in the database."""
+
     username = models.CharField(
         'Username',
         max_length=150,
@@ -38,6 +39,8 @@ class User(AbstractUser):
 
 
 class Subscription(models.Model):
+    """Class to store user subscriptions in the database."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
