@@ -6,7 +6,7 @@ from foodgram.settings import BASE_DIR
 from recipes.models import Ingredient
 
 ALREDY_LOADED_ERROR_MESSAGE = """
-If you need to reload the child data from the CSV file,
+If you need to reload the ingredients data from the CSV file,
 first delete the db.sqlite3 file to destroy the database.
 Then, run `python manage.py migrate` for a new empty
 database with tables"""
@@ -23,12 +23,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         if Ingredient.objects.exists():
-            self.stderr.write(self.style.WARNING(
-                'Ingredients data already loaded...exiting.'))
-            self.stderr.write(self.style.WARNING(ALREDY_LOADED_ERROR_MESSAGE))
+            self.stderr.write('Ingredients data already loaded...exiting.')
+            self.stderr.write(ALREDY_LOADED_ERROR_MESSAGE)
             return
 
-        self.stdout.write(self.style.SUCCESS('Loading ingredients data'))
+        self.stdout.write('Loading ingredients data')
 
         for row in DictReader(open(DATA_FILE_PATH, encoding='utf-8')):
             ingr = Ingredient(
