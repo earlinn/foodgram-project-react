@@ -20,7 +20,7 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     """Class to store ingredients for recipes in the database."""
 
-    name = models.CharField('Name', max_length=200, unique=True, db_index=True)
+    name = models.CharField('Name', max_length=200, db_index=True)
     measurement_unit = models.CharField('Measurement unit', max_length=200)
 
     class Meta:
