@@ -29,10 +29,12 @@ class User(AbstractUser):
         max_length=150,
         blank=False
     )
+    password = models.CharField('Password', max_length=150)
 
     class Meta:
         verbose_name = 'User'
         verbose_name_plural = 'Users'
+        ordering = ['pk']
 
     def __str__(self):
         return self.username
@@ -57,6 +59,7 @@ class Subscription(models.Model):
     class Meta:
         verbose_name = 'Subscription'
         verbose_name_plural = 'Subscriptions'
+        ordering = ['pk']
 
     def __str__(self):
         return f'{self.user} is following {self.author}'

@@ -17,7 +17,7 @@ class UserAdmin(admin.ModelAdmin):
 class SubscriptionAdmin(admin.ModelAdmin):
     """Class to customize subscriptions display in admin panel."""
 
-    list_display = ['user', 'author']
+    list_display = ['pk', 'user', 'author']
     search_fields = ['user', 'author']
 
 
