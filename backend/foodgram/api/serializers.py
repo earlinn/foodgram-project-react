@@ -1,9 +1,22 @@
+from djoser.serializers import (CurrentPasswordSerializer, PasswordSerializer,
+                                UserCreateSerializer, UserSerializer)
 from rest_framework import serializers
 from users.models import User
 
 
-class UserSerializer(serializers.ModelSerializer):
-    """Serializer for users."""
+class CustomUserCreateSerializer(UserCreateSerializer):
+    """Custom serializer for new users registration."""
+
+    class Meta:
+        model = User
+        fields = (
+            'email', 'id', 'username', 'first_name',
+            'last_name', 'password',
+        )
+
+
+class CustomUserSerializer(UserSerializer):
+    """Custom serializer for displaying information about users."""
 
     is_subscribed = serializers.SerializerMethodField()
 
@@ -15,7 +28,15 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        request = self.context['request']
+        request = self.context.get('request')
         if not request or request.user.is_anonymous:
             return False
-        return self.obj.following.filter(user=request.user).exists()
+        return obj.following.filter(user=request.user).exists()
+
+
+class CustomSetPasswordRetypeSerializer(
+    PasswordSerializer, CurrentPasswordSerializer
+):
+    """Custom serializer to change current user's password."""
+
+    pass
