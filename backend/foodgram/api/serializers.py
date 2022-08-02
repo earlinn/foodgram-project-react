@@ -1,6 +1,6 @@
 from djoser.serializers import (CurrentPasswordSerializer, PasswordSerializer,
                                 UserCreateSerializer, UserSerializer)
-from recipes.models import Tag
+from recipes.models import Ingredient, Tag
 from rest_framework import serializers
 from users.models import User
 
@@ -48,4 +48,12 @@ class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
+        fields = '__all__'
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    """Serializer for ingredients."""
+
+    class Meta:
+        model = Ingredient
         fields = '__all__'
