@@ -1,9 +1,11 @@
+from recipes.models import Tag
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.response import Response
 from users.models import User
 
 from .serializers import (CustomSetPasswordRetypeSerializer,
-                          CustomUserCreateSerializer, CustomUserSerializer)
+                          CustomUserCreateSerializer, CustomUserSerializer,
+                          TagSerializer)
 
 
 class UserViewSet(
@@ -58,3 +60,11 @@ class SetPasswordRetypeView(views.APIView):
             self.request.user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    """Viewset for tags display."""
+
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = [permissions.AllowAny]

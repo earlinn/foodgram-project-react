@@ -1,5 +1,6 @@
 from djoser.serializers import (CurrentPasswordSerializer, PasswordSerializer,
                                 UserCreateSerializer, UserSerializer)
+from recipes.models import Tag
 from rest_framework import serializers
 from users.models import User
 
@@ -40,3 +41,11 @@ class CustomSetPasswordRetypeSerializer(
     """Custom serializer to change current user's password."""
 
     pass
+
+
+class TagSerializer(serializers.ModelSerializer):
+    """Serializer for tags."""
+
+    class Meta:
+        model = Tag
+        fields = '__all__'

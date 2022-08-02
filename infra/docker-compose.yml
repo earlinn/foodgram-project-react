@@ -12,8 +12,10 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     restart: always
+    ports:
+      - "5432:5432"
     env_file:
-      - ./.env
+      - ../.env
   web:
     build:
       context: ../backend/foodgram
@@ -25,7 +27,7 @@ services:
     depends_on:
       - db
     env_file:
-      - ./.env
+      - ../.env
   nginx:
     image: nginx:1.19.3
     ports:
@@ -38,9 +40,7 @@ services:
       - media_value:/var/html/media/
     depends_on:
       - web
-#    command: python3 manage.py runserver 0.0.0.8000
-#    volumes:
-#      - ./:/app/
+
 volumes:
   postgres_data:
   static_value:
