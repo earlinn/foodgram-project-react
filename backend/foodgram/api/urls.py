@@ -1,13 +1,14 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (IngredientViewSet, SelfUserView, SetPasswordRetypeView,
-                    TagViewSet, UserViewSet)
+from .views import (IngredientViewSet, RecipeViewSet, SelfUserView,
+                    SetPasswordRetypeView, TagViewSet, UserViewSet)
 
 router = DefaultRouter()
 router.register('users', UserViewSet)
 router.register('tags', TagViewSet)
 router.register('ingredients', IngredientViewSet)
+router.register('recipes', RecipeViewSet)
 
 urlpatterns = [
     path('users/me/', SelfUserView.as_view()),

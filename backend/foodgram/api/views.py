@@ -1,11 +1,12 @@
-from recipes.models import Ingredient, Tag
+from recipes.models import Ingredient, Recipe, Tag
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.response import Response
 from users.models import User
 
 from .serializers import (CustomSetPasswordRetypeSerializer,
                           CustomUserCreateSerializer, CustomUserSerializer,
-                          IngredientSerializer, TagSerializer)
+                          IngredientSerializer, RecipeSerializer,
+                          TagSerializer)
 
 
 class UserViewSet(
@@ -75,4 +76,12 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    permission_classes = [permissions.AllowAny]
+
+
+class RecipeViewSet(viewsets.ReadOnlyModelViewSet):
+    """Viewset for ingredients display."""
+
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
     permission_classes = [permissions.AllowAny]

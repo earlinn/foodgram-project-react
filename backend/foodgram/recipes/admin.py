@@ -4,6 +4,13 @@ from .models import (Favorite, Ingredient, Recipe, RecipeIngredients,
                      ShoppingCart, Tag)
 
 
+class RecipeIngredientsInline(admin.TabularInline):
+    """Inline class for the RecipeIngredients model display."""
+
+    model = RecipeIngredients
+    extra = 1
+
+
 class RecipeAdmin(admin.ModelAdmin):
     """Class to customize recipes display in admin panel."""
 
@@ -13,6 +20,7 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ['name', 'author', 'cooking_time', 'text']
     list_filter = ['pub_date', 'author']
     empty_value_display = '-empty-'
+    inlines = [RecipeIngredientsInline]
 
 
 class TagAdmin(admin.ModelAdmin):
@@ -28,12 +36,13 @@ class IngredientAdmin(admin.ModelAdmin):
     list_display = ['pk', 'name', 'measurement_unit']
     search_fields = ['name', 'measurement_unit']
     list_filter = ['name', 'measurement_unit']
+    inlines = [RecipeIngredientsInline]
 
 
 class RecipeIngredientsAdmin(admin.ModelAdmin):
     """Class to customize ingredients of recipes display in admin panel."""
 
-    list_display = ['pk', 'recipe', 'ingredient', 'quantity']
+    list_display = ['pk', 'recipe', 'ingredient', 'amount']
     search_fields = ['recipe', 'ingredient']
     list_filter = ['recipe', 'ingredient']
 

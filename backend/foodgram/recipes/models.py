@@ -66,16 +66,18 @@ class Recipe(models.Model):
 class RecipeIngredients(models.Model):
     """Class to store ingredients of a particular recipe in the database."""
 
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField('Quantity')
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, related_name='recipeingredients')
+    ingredient = models.ForeignKey(
+        Ingredient, on_delete=models.CASCADE, related_name='recipeingredients')
+    amount = models.PositiveIntegerField('Amount')
 
     class Meta:
         verbose_name = 'Ingredient of a recipe'
         verbose_name_plural = 'Ingredients of recipes'
 
     def __str__(self):
-        return f'{self.recipe} needs {self.quantity} of {self.ingredient}'
+        return f'{self.recipe} needs {self.amount} of {self.ingredient}'
 
 
 class Favorite(models.Model):
