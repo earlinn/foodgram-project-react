@@ -79,7 +79,8 @@ class RecipeIngredientsSerializer(serializers.ModelSerializer):
 class RecipeCreateIngredientsSerializer(serializers.ModelSerializer):
     """Serializer to display ingredients during recipe creation."""
 
-    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    id = serializers.PrimaryKeyRelatedField(
+        source='ingredient', queryset=Ingredient.objects.all())
 
     class Meta:
         model = RecipeIngredients
@@ -140,7 +141,7 @@ class RecipeCreateSerializer(RecipeSerializer):
         recipe_ingredients = [
             RecipeIngredients(
                 recipe=recipe,
-                ingredient=current_ingredient['id'],
+                ingredient=current_ingredient['ingredient'],
                 amount=current_ingredient['amount'],
             )
             for current_ingredient in ingredients
