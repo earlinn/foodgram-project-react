@@ -3,6 +3,7 @@ import io
 from collections import OrderedDict
 
 from django.core.files.images import ImageFile
+from django.shortcuts import get_object_or_404
 from djoser.serializers import (CurrentPasswordSerializer, PasswordSerializer,
                                 UserCreateSerializer, UserSerializer)
 from recipes.models import Ingredient, Recipe, RecipeIngredients, Tag
@@ -132,11 +133,6 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipeCreateSerializer(RecipeSerializer):
     """Serializer for creating recipes."""
 
-    # после выполнения post-запроса успешный ответ апи выглядит неправильно
-    # в полях тегов и ингридиентов
-    # эти поля должны выглядеть так, как при get-запросе, а они выглядят
-    # как при post-запросе
-    # надо поработать с методом to_representation (см.)
     tags = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Tag.objects.all())
     ingredients = RecipeCreateIngredientsSerializer(
@@ -162,4 +158,11 @@ class RecipeCreateSerializer(RecipeSerializer):
         return recipe
 
     def to_representation(self, instance):
-        return super().to_representation(instance)
+        repr = super().to_representation(instance)
+        tag_id_list, tag_list = repr['tags'], []
+        for tag_id in tag_id_list:
+            tag = get_object_or_404(Tag, id=tag_id)
+            serialized_tag = OrderedDict(TagSerializer(tag).data)
+            tag_list.append(serialized_tag)
+        repr['tags'] = tag_list
+        return repr
