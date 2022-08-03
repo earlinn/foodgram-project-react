@@ -1,5 +1,6 @@
 import base64
 import io
+from collections import OrderedDict
 
 from django.core.files.images import ImageFile
 from djoser.serializers import (CurrentPasswordSerializer, PasswordSerializer,
@@ -85,6 +86,15 @@ class RecipeCreateIngredientsSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredients
         fields = ['id', 'amount']
+
+    def to_representation(self, instance):
+        old_repr = super().to_representation(instance)
+        new_repr = OrderedDict()
+        new_repr['id'] = old_repr['id']
+        new_repr['name'] = instance.ingredient.name
+        new_repr['measurement_unit'] = instance.ingredient.measurement_unit
+        new_repr['amount'] = old_repr['amount']
+        return new_repr
 
 
 class ImageBase64Field(serializers.Field):
