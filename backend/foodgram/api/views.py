@@ -1,5 +1,5 @@
 from django_filters import rest_framework as rf_filters
-from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from recipes.models import Ingredient, Recipe, Tag
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.response import Response
 from users.models import User
@@ -90,10 +90,32 @@ class RecipeFilter(rf_filters.FilterSet):
 
     tags = rf_filters.MultipleChoiceFilter(
         field_name='tags__slug', choices=TAG_CHOICES)
+    is_favorited = rf_filters.NumberFilter(method='get_is_favorited')
+    is_in_shopping_cart = rf_filters.NumberFilter(
+        method='get_is_in_shopping_cart')
 
     class Meta:
         model = Recipe
-        fields = ['tags', 'author']
+        fields = ['tags', 'author', 'is_favorited', 'is_in_shopping_cart']
+
+    def get_is_favorited(self, queryset, name, value):
+        user = self.request.user
+        recipe_ids = [
+            x.pk for x in Recipe.objects.all() if x.is_favorited(user) == value
+        ]
+        if recipe_ids:
+            return Recipe.objects.filter(pk__in=recipe_ids)
+        return Recipe.objects.none()
+
+    def get_is_in_shopping_cart(self, queryset, name, value):
+        user = self.request.user
+        recipes = Recipe.objects.all()
+        recipe_ids = [
+            x.pk for x in recipes if x.is_in_shopping_cart(user) == value
+        ]
+        if recipe_ids:
+            return Recipe.objects.filter(pk__in=recipe_ids)
+        return Recipe.objects.none()
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -105,23 +127,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
     filter_backends = [rf_filters.DjangoFilterBackend]
     filterset_class = RecipeFilter
-
-    def get_queryset(self):
-        is_favorited = self.request.query_params.get('is_favorited')
-        is_in_shopping_cart = self.request.query_params.get(
-            'is_in_shopping_cart')
-        user_favorites = Favorite.objects.filter(user=self.request.user)
-        user_shopping = ShoppingCart.objects.filter(user=self.request.user)
-        # работают даже запросы вида /api/recipes/?is_favorited (без =)
-        # запрос вида /api/recipes/?is_favorited=True&is_in_shopping_cart=True
-        # фильтрует только по первому параметру, ведь происходит return и
-        # выход из данного метода
-        if is_favorited is not None:
-            print(is_favorited)  # для отладки
-            return Recipe.objects.filter(favorites__in=user_favorites)
-        if is_in_shopping_cart is not None:
-            return Recipe.objects.filter(shopping__in=user_shopping)
-        return Recipe.objects.all()
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
