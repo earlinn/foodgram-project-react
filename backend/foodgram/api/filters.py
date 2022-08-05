@@ -9,29 +9,18 @@ class RecipeFilter(rf_filters.FilterSet):
 
     tags = rf_filters.MultipleChoiceFilter(
         field_name='tags__slug', choices=TAG_CHOICES)
-    is_favorited = rf_filters.NumberFilter(method='get_is_favorited')
+    is_favorited = rf_filters.NumberFilter(method='recipe_boolean_methods')
     is_in_shopping_cart = rf_filters.NumberFilter(
-        method='get_is_in_shopping_cart')
+        method='recipe_boolean_methods')
 
     class Meta:
         model = Recipe
         fields = ['tags', 'author', 'is_favorited', 'is_in_shopping_cart']
 
-    def get_is_favorited(self, queryset, name, value):
+    def recipe_boolean_methods(self, queryset, name, value):
         user = self.request.user
         recipe_ids = [
-            x.pk for x in Recipe.objects.all() if x.is_favorited(user) == value
-        ]
+            r.pk for r in queryset if getattr(r, name)(user) == value]
         if recipe_ids:
-            return Recipe.objects.filter(pk__in=recipe_ids)
-        return Recipe.objects.none()
-
-    def get_is_in_shopping_cart(self, queryset, name, value):
-        user = self.request.user
-        recipes = Recipe.objects.all()
-        recipe_ids = [
-            x.pk for x in recipes if x.is_in_shopping_cart(user) == value
-        ]
-        if recipe_ids:
-            return Recipe.objects.filter(pk__in=recipe_ids)
-        return Recipe.objects.none()
+            return queryset.filter(pk__in=recipe_ids)
+        return queryset.none()

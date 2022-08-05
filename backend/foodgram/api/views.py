@@ -1,6 +1,7 @@
 from django_filters import rest_framework as rf_filters
 from recipes.models import Ingredient, Recipe, Tag
-from rest_framework import mixins, permissions, status, views, viewsets
+from rest_framework import (filters, mixins, permissions, status, views,
+                            viewsets)
 from rest_framework.response import Response
 from users.models import User
 
@@ -82,6 +83,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = [permissions.AllowAny]
     pagination_class = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['^name']
 
 
 class RecipeViewSet(viewsets.ModelViewSet):

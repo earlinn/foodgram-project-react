@@ -60,14 +60,10 @@ class Recipe(models.Model):
         verbose_name_plural = 'Recipes'
 
     def is_favorited(self, user):
-        if self.favorites.filter(user=user).exists():
-            return 1
-        return 0
+        return self.favorites.filter(user=user).exists()
 
     def is_in_shopping_cart(self, user):
-        if self.shopping.filter(user=user).exists():
-            return 1
-        return 0
+        return self.shopping.filter(user=user).exists()
 
     def __str__(self):
         return self.name
