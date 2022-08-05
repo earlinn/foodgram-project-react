@@ -1,12 +1,10 @@
-import base64
-import io
 from collections import OrderedDict
 
-from django.core.files.images import ImageFile
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from djoser.serializers import (CurrentPasswordSerializer, PasswordSerializer,
                                 UserCreateSerializer, UserSerializer)
+from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, Recipe, RecipeIngredients, Tag
 from rest_framework import serializers
 from users.models import User
@@ -103,20 +101,6 @@ class RecipeCreateIngredientsSerializer(serializers.ModelSerializer):
         return new_repr
 
 
-class ImageBase64Field(serializers.Field):
-    """Image objects encoded in base64 strings."""
-
-    # Comment to_representation method before running the app
-    # in docker-compose containers as the frontend encodes the image itself
-    def to_representation(self, value):
-        value = base64.b64encode(bytes(value.read()))
-        return f'data:image/png;base64,{value}'
-
-    def to_internal_value(self, data):
-        data = base64.b64decode(data.strip('data:image/png;base64,'))
-        return ImageFile(io.BytesIO(data), name='image.png')
-
-
 class RecipeSerializer(serializers.ModelSerializer):
     """Serializer for recipes."""
 
@@ -128,7 +112,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = serializers.SerializerMethodField()
     # поменять на drf_extra_fields.fields.Base64ImageField
     # (установить через pip)
-    image = ImageBase64Field()
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
