@@ -12,7 +12,9 @@ Then, run `python manage.py migrate` for a new empty
 database with tables"""
 
 DATA_FILE_PATH = Path(
-    Path(BASE_DIR).parent.parent, 'data', 'recipes_ingredient.csv')
+    # Path for local development:
+    # Path(BASE_DIR).parent.parent, 'data', 'recipes_ingredient.csv')
+    Path(BASE_DIR), 'recipes_ingredient.csv')
 
 
 class Command(BaseCommand):

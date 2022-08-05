@@ -3,6 +3,7 @@ import io
 from collections import OrderedDict
 
 from django.core.files.images import ImageFile
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from djoser.serializers import (CurrentPasswordSerializer, PasswordSerializer,
                                 UserCreateSerializer, UserSerializer)
@@ -49,6 +50,8 @@ class CustomSetPasswordRetypeSerializer(
     pass
 
 
+# можно добавить проверку (валидацию), что этот тег не добавляли
+# несколько раз в один и тот же рецепт
 class TagSerializer(serializers.ModelSerializer):
     """Serializer for tags."""
 
@@ -57,6 +60,8 @@ class TagSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+# можно добавить проверку (валидацию), что этот ингредиент не добавляли
+# несколько раз в один и тот же рецепт
 class IngredientSerializer(serializers.ModelSerializer):
     """Serializer for ingredients."""
 
@@ -121,6 +126,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         many=True, source='recipeingredients')
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
+    # поменять на drf_extra_fields.fields.Base64ImageField
+    # (установить через pip)
     image = ImageBase64Field()
 
     class Meta:
@@ -151,6 +158,7 @@ class RecipeCreateSerializer(RecipeSerializer):
     ingredients = RecipeCreateIngredientsSerializer(
         source='recipeingredients', many=True)
 
+    @transaction.atomic
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('recipeingredients')
