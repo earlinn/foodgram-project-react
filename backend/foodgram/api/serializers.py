@@ -6,7 +6,7 @@ from djoser.serializers import (CurrentPasswordSerializer, PasswordSerializer,
                                 UserCreateSerializer, UserSerializer)
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, Recipe, RecipeIngredients, Tag
-from rest_framework import serializers
+from rest_framework import serializers, validators
 from users.models import User
 
 
@@ -58,8 +58,6 @@ class TagSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# можно добавить проверку (валидацию), что этот ингредиент не добавляли
-# несколько раз в один и тот же рецепт
 class IngredientSerializer(serializers.ModelSerializer):
     """Serializer for ingredients."""
 
@@ -90,6 +88,12 @@ class RecipeCreateIngredientsSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredients
         fields = ['id', 'amount']
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=RecipeIngredients.objects.all(),
+                fields=('recipe', 'ingredient')
+            )
+        ]
 
     def to_representation(self, instance):
         old_repr = super().to_representation(instance)
@@ -157,8 +161,20 @@ class RecipeCreateSerializer(RecipeSerializer):
         ]
 
         RecipeIngredients.objects.bulk_create(recipe_ingredients)
-
         return recipe
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
+
+    def validate(self, attrs):
+        user = self.context.get('request').user
+        print(attrs)  # убрать
+        if Recipe.objects.filter(name=attrs['name'], author=user).exists():
+            raise serializers.ValidationError(
+                'You already have a recipe with that name.'
+            )
+        return attrs
 
     def to_representation(self, instance):
         repr = super().to_representation(instance)
@@ -173,3 +189,5 @@ class RecipeCreateSerializer(RecipeSerializer):
 # сейчас через админку можно добавить в favorites один и тот же рецепт
 # много раз (запрещено по спеке, наверно стоит запретить на уровне модели БД),
 # а также свой собственный рецепт (вроде не запрещено, но стоит уточнить)
+# применить validators.UniqueTogetherValidator в сериализаторах для favorites
+# и shopping

@@ -58,6 +58,12 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = 'Recipe'
         verbose_name_plural = 'Recipes'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'name'],
+                name='unique_author_name'
+            )
+        ]
 
     def is_favorited(self, user):
         return self.favorites.filter(user=user).exists()
@@ -105,6 +111,12 @@ class Favorite(models.Model):
     class Meta:
         verbose_name = 'Favorite'
         verbose_name_plural = 'Favorites'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_favorite'
+            )
+        ]
 
     def __str__(self):
         return f'{self.user} added {self.recipe} to favorites'
@@ -129,6 +141,12 @@ class ShoppingCart(models.Model):
     class Meta:
         verbose_name = 'Shopping Cart'
         verbose_name_plural = 'Shopping Carts'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_shopping'
+            )
+        ]
 
     def __str__(self):
         return f'{self.user} added {self.recipe} to shopping cart'
