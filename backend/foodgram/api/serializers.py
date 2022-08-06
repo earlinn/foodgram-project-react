@@ -169,3 +169,7 @@ class RecipeCreateSerializer(RecipeSerializer):
             tag_list.append(serialized_tag)
         repr['tags'] = tag_list
         return repr
+
+# сейчас через админку можно добавить в favorites один и тот же рецепт
+# много раз (запрещено по спеке, наверно стоит запретить на уровне модели БД),
+# а также свой собственный рецепт (вроде не запрещено, но стоит уточнить)

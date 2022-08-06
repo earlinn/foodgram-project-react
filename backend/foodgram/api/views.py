@@ -87,6 +87,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ['^name']
 
 
+# на фронте не работает поиск по ингредиентам
 class RecipeViewSet(viewsets.ModelViewSet):
     """Viewset for recipes display."""
 
