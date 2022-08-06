@@ -6,7 +6,7 @@ from djoser.serializers import (CurrentPasswordSerializer, PasswordSerializer,
                                 UserCreateSerializer, UserSerializer)
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, Recipe, RecipeIngredients, Tag
-from rest_framework import serializers, validators
+from rest_framework import serializers
 from users.models import User
 
 
@@ -88,12 +88,12 @@ class RecipeCreateIngredientsSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredients
         fields = ['id', 'amount']
-        validators = [
-            validators.UniqueTogetherValidator(
-                queryset=RecipeIngredients.objects.all(),
-                fields=('recipe', 'ingredient')
-            )
-        ]
+#        validators = [
+#            validators.UniqueTogetherValidator(
+#                queryset=RecipeIngredients.objects.all(),
+#                fields=('recipe', 'ingredient')
+#            )
+#        ]  # выдает key error recipe
 
     def to_representation(self, instance):
         old_repr = super().to_representation(instance)
@@ -144,6 +144,15 @@ class RecipeCreateSerializer(RecipeSerializer):
     ingredients = RecipeCreateIngredientsSerializer(
         source='recipeingredients', many=True)
 
+    def validate(self, attrs):
+        if self.context['request']._request.method == 'POST':
+            user = self.context.get('request').user
+            if Recipe.objects.filter(name=attrs['name'], author=user).exists():
+                raise serializers.ValidationError(
+                    'You already have a recipe with that name.'
+                )
+        return attrs
+
     @transaction.atomic
     def set_recipe_ingredients(self, recipe, ingredients):
         recipe_ingredients = [
@@ -175,15 +184,6 @@ class RecipeCreateSerializer(RecipeSerializer):
         instance.tags.set(tags)
         self.set_recipe_ingredients(instance, ingredients)
         return instance
-
-    def validate(self, attrs):
-        user = self.context.get('request').user
-        print(attrs)  # убрать
-        if Recipe.objects.filter(name=attrs['name'], author=user).exists():
-            raise serializers.ValidationError(
-                'You already have a recipe with that name.'
-            )
-        return attrs
 
     def to_representation(self, instance):
         repr = super().to_representation(instance)
