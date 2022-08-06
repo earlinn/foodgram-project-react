@@ -145,12 +145,7 @@ class RecipeCreateSerializer(RecipeSerializer):
         source='recipeingredients', many=True)
 
     @transaction.atomic
-    def create(self, validated_data):
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('recipeingredients')
-        recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags)
-
+    def set_recipe_ingredients(self, recipe, ingredients):
         recipe_ingredients = [
             RecipeIngredients(
                 recipe=recipe,
@@ -159,13 +154,27 @@ class RecipeCreateSerializer(RecipeSerializer):
             )
             for current_ingredient in ingredients
         ]
-
         RecipeIngredients.objects.bulk_create(recipe_ingredients)
+
+    @transaction.atomic
+    def create(self, validated_data):
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('recipeingredients')
+        recipe = Recipe.objects.create(**validated_data)
+        recipe.tags.set(tags)
+        self.set_recipe_ingredients(recipe, ingredients)
         return recipe
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        return super().update(instance, validated_data)
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('recipeingredients')
+        instance.ingredients.clear()
+        instance.tags.clear()
+        super().update(instance, validated_data)
+        instance.tags.set(tags)
+        self.set_recipe_ingredients(instance, ingredients)
+        return instance
 
     def validate(self, attrs):
         user = self.context.get('request').user
