@@ -1,11 +1,10 @@
 from django_filters import rest_framework as rf_filters
 from recipes.models import Ingredient, Recipe, Tag
-from rest_framework import (filters, mixins, permissions, status, views,
-                            viewsets)
+from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.response import Response
 from users.models import User
 
-from .filters import RecipeFilter
+from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (CustomSetPasswordRetypeSerializer,
                           CustomUserCreateSerializer, CustomUserSerializer,
@@ -83,11 +82,10 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = [permissions.AllowAny]
     pagination_class = None
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['^name']
+    filter_backends = [rf_filters.DjangoFilterBackend]
+    filterset_class = IngredientFilter
 
 
-# на фронте не работает поиск по ингредиентам
 class RecipeViewSet(viewsets.ModelViewSet):
     """Viewset for recipes display."""
 

@@ -1,5 +1,15 @@
 from django_filters import rest_framework as rf_filters
-from recipes.models import Recipe
+from recipes.models import Ingredient, Recipe
+
+
+class IngredientFilter(rf_filters.FilterSet):
+    """"""
+
+    name = rf_filters.CharFilter(field_name='name', lookup_expr='icontains')
+
+    class Meta:
+        model = Ingredient
+        fields = ['name']
 
 
 class RecipeFilter(rf_filters.FilterSet):
