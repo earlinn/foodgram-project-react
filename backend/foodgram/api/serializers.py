@@ -30,7 +30,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
 
 class CustomUserSerializer(UserSerializer):
-    """Custom serializer for displaying information about users."""
+    """Custom serializer for displaying information on users."""
 
     is_subscribed = serializers.SerializerMethodField()
 
@@ -71,7 +71,7 @@ class SubscriptionSerializer(CustomUserSerializer):
         depth = 1
 
     def get_recipes(self, obj):
-        recipes_limit = self.context.get('request').GET.get('recipes_limit')
+        recipes_limit = self.context['request'].GET.get('recipes_limit')
         if recipes_limit:
             recipes = obj.recipes.all()[:int(recipes_limit)]
         else:
@@ -195,13 +195,18 @@ class RecipeCreateSerializer(RecipeSerializer):
                 raise serializers.ValidationError(
                     'You already have a recipe with that name.'
                 )
-        mandatory_fields = [
-            'tags', 'ingredients', 'name', 'image', 'text', 'cooking_time']
-        for field_name in mandatory_fields:
-            if field_name not in self._kwargs['data']:
-                raise serializers.ValidationError(
-                    f'The field {field_name} is required.'
-                )
+        # работает, выводит то самое сообщение, которое ниже,
+        # но из-за этого при редактировании рецепта приходится заново грузить
+        # ту же самую картинку, что неудобно (может я вообще с другого компа
+        # зашла, и там у меня нет этой картинки), поэтому закомментировала
+
+        # mandatory_fields = [
+        #     'tags', 'ingredients', 'name', 'image', 'text', 'cooking_time']
+        # for field_name in mandatory_fields:
+        #     if field_name not in self._kwargs['data']:
+        #         raise serializers.ValidationError(
+        #             f'The field {field_name} is required.'
+        #         )
         return attrs
 
     def validate_tags(self, value):
@@ -214,7 +219,7 @@ class RecipeCreateSerializer(RecipeSerializer):
 
     def validate_ingredients(self, value):
         ingredients_ids = [ingredient['ingredient'].id for ingredient in value]
-        # фронтенд не выводит этот error
+        # фронтенд не выводит этот error!
         if len(ingredients_ids) != len(set(ingredients_ids)):
             raise serializers.ValidationError(
                 'Unable to add the same ingredient multiple times.'
@@ -242,8 +247,7 @@ class RecipeCreateSerializer(RecipeSerializer):
         self.set_recipe_ingredients(recipe, ingredients)
         return recipe
 
-    # при patch-запросе через postman позволяет обновить рецепт
-    # не со всеми полями, при put-запросе требует все поля
+    # при patch-запросе через postman не требует все поля
     @transaction.atomic
     def update(self, instance, validated_data):
         # if self._kwargs['context']['request']._request.method == 'PATCH':
@@ -279,9 +283,3 @@ class RecipeLightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
-
-# сейчас через админку можно добавить в favorites один и тот же рецепт
-# много раз (запрещено по спеке, наверно стоит запретить на уровне модели БД),
-# а также свой собственный рецепт (вроде не запрещено, но стоит уточнить)
-# применить validators.UniqueTogetherValidator в сериализаторах для favorites
-# и shopping

@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as rf_filters
-from recipes.models import Favorite, Ingredient, Recipe, Tag
+from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -56,7 +56,7 @@ class UserViewSet(
             user=request.user, author=author)
         if request.method == 'DELETE' and not subscription:
             return Response(
-                {"errors": "Unable to delete non-existent subscription."},
+                {'errors': 'Unable to delete non-existent subscription.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         if request.method == 'DELETE':
@@ -64,12 +64,12 @@ class UserViewSet(
             return Response(status=status.HTTP_204_NO_CONTENT)
         if subscription:
             return Response(
-                {"errors": 'You are already following this user.'},
+                {'errors': 'You are already following this user.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         if author == request.user:
             return Response(
-                {"errors": "Unable to subscribe to yourself."},
+                {'errors': 'Unable to subscribe to yourself.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         Subscription.objects.create(user=request.user, author=author)
@@ -116,7 +116,7 @@ class SetPasswordRetypeView(views.APIView):
             }
         )
         if serializer.is_valid():
-            self.request.user.set_password(serializer.data["new_password"])
+            self.request.user.set_password(serializer.data['new_password'])
             self.request.user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -163,28 +163,23 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeCreateSerializer
         return RecipeSerializer
 
-    @action(
-        methods=['post', 'delete'],
-        detail=True,
-        permission_classes=[permissions.IsAuthenticated]
-    )
-    def favorite(self, request, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        favorite = Favorite.objects.filter(recipe=recipe, user=request.user)
-        if request.method == 'DELETE' and not favorite:
+    def create_delete_or_scold(self, model, recipe, request):
+        instance = model.objects.filter(recipe=recipe, user=request.user)
+        name = model.__name__
+        if request.method == 'DELETE' and not instance:
             return Response(
-                {"errors": "This recipe was not on your list."},
+                {'errors': f'This recipe was not on your {name} list.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         if request.method == 'DELETE':
-            favorite.delete()
+            instance.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        if favorite:
+        if instance:
             return Response(
-                {"errors": 'This recipe was already on your list.'},
+                {'errors': f'This recipe was already on your {name} list.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        Favorite.objects.create(user=request.user, recipe=recipe)
+        model.objects.create(user=request.user, recipe=recipe)
         serializer = RecipeLightSerializer(
             recipe,
             context={
@@ -194,3 +189,23 @@ class RecipeViewSet(viewsets.ModelViewSet):
             }
         )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(
+        methods=['post', 'delete'],
+        detail=True,
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def favorite(self, request, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+        return self.create_delete_or_scold(Favorite, recipe, request)
+
+    @action(
+        methods=['post', 'delete'],
+        detail=True,
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def shopping_cart(self, request, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+        return self.create_delete_or_scold(ShoppingCart, recipe, request)
+
+# сделать эндпойнт http://localhost/api/recipes/download_shopping_cart/
