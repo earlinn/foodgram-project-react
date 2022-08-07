@@ -87,7 +87,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    """Viewset for recipes display."""
+    """Viewset for recipes."""
 
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer

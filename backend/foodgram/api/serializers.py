@@ -7,7 +7,7 @@ from djoser.serializers import (CurrentPasswordSerializer, PasswordSerializer,
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, Recipe, RecipeIngredients, Tag
 from rest_framework import serializers
-from users.models import User
+from users.models import Subscription, User
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -19,6 +19,13 @@ class CustomUserCreateSerializer(UserCreateSerializer):
             'email', 'id', 'username', 'first_name',
             'last_name', 'password',
         )
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError(
+                'Unable to create user with username me.'
+            )
+        return value
 
 
 class CustomUserSerializer(UserSerializer):
@@ -48,8 +55,6 @@ class CustomSetPasswordRetypeSerializer(
     pass
 
 
-# можно добавить проверку (валидацию), что этот тег не добавляли
-# несколько раз в один и тот же рецепт
 class TagSerializer(serializers.ModelSerializer):
     """Serializer for tags."""
 
@@ -76,7 +81,7 @@ class RecipeIngredientsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RecipeIngredients
-        fields = ['id', 'name', 'measurement_unit', 'amount']
+        fields = ('id', 'name', 'measurement_unit', 'amount',)
 
 
 class RecipeCreateIngredientsSerializer(serializers.ModelSerializer):
@@ -87,13 +92,7 @@ class RecipeCreateIngredientsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RecipeIngredients
-        fields = ['id', 'amount']
-#        validators = [
-#            validators.UniqueTogetherValidator(
-#                queryset=RecipeIngredients.objects.all(),
-#                fields=('recipe', 'ingredient')
-#            )
-#        ]  # выдает key error recipe
+        fields = ('id', 'amount',)
 
     def to_representation(self, instance):
         old_repr = super().to_representation(instance)
@@ -106,7 +105,7 @@ class RecipeCreateIngredientsSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    """Serializer for recipes."""
+    """Serializer for displaying recipes."""
 
     tags = TagSerializer(many=True)
     author = CustomUserSerializer(read_only=True)
@@ -118,10 +117,10 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = [
+        fields = (
             'id', 'tags', 'author', 'ingredients', 'is_favorited',
-            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time'
-        ]
+            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
+        )
 
     def get_is_favorited(self, obj):
         request = self.context.get('request')
@@ -137,21 +136,60 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(RecipeSerializer):
-    """Serializer for creating recipes."""
+    """Serializer for creating and updatind recipes."""
 
     tags = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Tag.objects.all())
     ingredients = RecipeCreateIngredientsSerializer(
         source='recipeingredients', many=True)
 
+    class Meta:
+        model = Recipe
+        fields = (
+            'id', 'tags', 'author', 'ingredients', 'is_favorited',
+            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
+        )
+#        extra_kwargs = {field:{'required': True} for field in fields}
+        extra_kwargs = {
+            'tags': {'required': True},
+            'ingredients': {'required': True},
+            'name': {'required': True},
+            'image': {'required': True},
+            'text': {'required': True},
+            'cooking_time': {'required': True},
+        }
+
     def validate(self, attrs):
-        if self.context['request']._request.method == 'POST':
+        if self._kwargs['context']['request']._request.method == 'POST':
             user = self.context.get('request').user
             if Recipe.objects.filter(name=attrs['name'], author=user).exists():
                 raise serializers.ValidationError(
                     'You already have a recipe with that name.'
                 )
+        mandatory_fields = [
+            'tags', 'ingredients', 'name', 'image', 'text', 'cooking_time']
+        for field_name in mandatory_fields:
+            if field_name not in self._kwargs['data']:
+                raise serializers.ValidationError(
+                    f'The field {field_name} is required.'
+                )
         return attrs
+
+    def validate_tags(self, value):
+        tags_names = [tag.name for tag in value]
+        if len(tags_names) != len(set(tags_names)):
+            raise serializers.ValidationError(
+                'Unable to add the same tag multiple times.'
+            )
+        return value
+
+    def validate_ingredients(self, value):
+        ingredients_ids = [ingredient['ingredient'].id for ingredient in value]
+        if len(ingredients_ids) != len(set(ingredients_ids)):
+            raise serializers.ValidationError(
+                'Unable to add the same ingredient multiple times.'
+            )
+        return value
 
     @transaction.atomic
     def set_recipe_ingredients(self, recipe, ingredients):
@@ -174,8 +212,13 @@ class RecipeCreateSerializer(RecipeSerializer):
         self.set_recipe_ingredients(recipe, ingredients)
         return recipe
 
+    # при patch-запросе через postman позволяет обновить рецепт
+    # не со всеми полями, при put-запросе требует все поля
     @transaction.atomic
     def update(self, instance, validated_data):
+        # if self._kwargs['context']['request']._request.method == 'PATCH':
+        #     self._kwargs['partial'] = False
+        #     print(self._kwargs)
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('recipeingredients')
         instance.ingredients.clear()
@@ -184,6 +227,10 @@ class RecipeCreateSerializer(RecipeSerializer):
         instance.tags.set(tags)
         self.set_recipe_ingredients(instance, ingredients)
         return instance
+
+#    def partial_update(self, request, *args, **kwargs):
+#        kwargs['partial'] = False
+#        return self.update(request, *args, **kwargs)
 
     def to_representation(self, instance):
         repr = super().to_representation(instance)

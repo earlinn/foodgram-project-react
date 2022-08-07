@@ -5,13 +5,14 @@ from users.models import User
 class Tag(models.Model):
     """Class to store recipe tags in the database."""
 
-    name = models.CharField('Name', max_length=200, unique=True, db_index=True)
+    name = models.CharField('Name', max_length=200, unique=True)
     color = models.CharField('Color', max_length=7, unique=True)
     slug = models.SlugField('Slug', max_length=200, unique=True)
 
     class Meta:
         verbose_name = 'Tag'
         verbose_name_plural = 'Tags'
+        ordering = ['pk']
 
     def __str__(self):
         return self.name
@@ -58,6 +59,7 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = 'Recipe'
         verbose_name_plural = 'Recipes'
+        ordering = ['-pub_date']
         constraints = [
             models.UniqueConstraint(
                 fields=['author', 'name'],
@@ -87,6 +89,12 @@ class RecipeIngredients(models.Model):
     class Meta:
         verbose_name = 'Ingredient of a recipe'
         verbose_name_plural = 'Ingredients of recipes'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique_recipe_ingredient'
+            )
+        ]
 
     def __str__(self):
         return f'{self.recipe} needs {self.amount} of {self.ingredient}'
