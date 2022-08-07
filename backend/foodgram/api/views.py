@@ -1,9 +1,10 @@
+from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as rf_filters
 from recipes.models import Ingredient, Recipe, Tag
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from users.models import User
+from users.models import Subscription, User
 
 from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnly
@@ -29,10 +30,7 @@ class UserViewSet(
             return CustomUserCreateSerializer
         return CustomUserSerializer
 
-    @action(
-        detail=False,
-        permission_classes=[permissions.IsAuthenticated],
-    )
+    @action(detail=False, permission_classes=[permissions.IsAuthenticated])
     def subscriptions(self, request):
         queryset = User.objects.filter(following__user=request.user)
         page = self.paginate_queryset(queryset)
@@ -46,6 +44,44 @@ class UserViewSet(
             }
         )
         return self.get_paginated_response(serializer.data)
+
+    @action(
+        methods=['post', 'delete'],
+        detail=True,
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def subscribe(self, request, pk):
+        author = get_object_or_404(User, id=pk)
+        subscription = Subscription.objects.filter(
+            user=request.user, author=author)
+        if request.method == 'DELETE' and not subscription:
+            return Response(
+                {"errors": "Unable to delete non-existent subscription."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if request.method == 'DELETE':
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        if subscription:
+            return Response(
+                {"errors": 'You are already following this user.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if author == request.user:
+            return Response(
+                {"errors": "Unable to subscribe to yourself."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        Subscription.objects.create(user=request.user, author=author)
+        serializer = SubscriptionSerializer(
+            author,
+            context={
+                'request': request,
+                'format': self.format_kwarg,
+                'view': self
+            }
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class SelfUserView(views.APIView):
