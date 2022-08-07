@@ -1,6 +1,7 @@
 from django_filters import rest_framework as rf_filters
 from recipes.models import Ingredient, Recipe, Tag
 from rest_framework import mixins, permissions, status, views, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.models import User
 
@@ -9,7 +10,8 @@ from .permissions import IsAuthorOrReadOnly
 from .serializers import (CustomSetPasswordRetypeSerializer,
                           CustomUserCreateSerializer, CustomUserSerializer,
                           IngredientSerializer, RecipeCreateSerializer,
-                          RecipeSerializer, TagSerializer)
+                          RecipeSerializer, SubscriptionSerializer,
+                          TagSerializer)
 
 
 class UserViewSet(
@@ -26,6 +28,24 @@ class UserViewSet(
         if self.action == 'create':
             return CustomUserCreateSerializer
         return CustomUserSerializer
+
+    @action(
+        detail=False,
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def subscriptions(self, request):
+        queryset = User.objects.filter(following__user=request.user)
+        page = self.paginate_queryset(queryset)
+        serializer = SubscriptionSerializer(
+            page,
+            many=True,
+            context={
+                'request': request,
+                'format': self.format_kwarg,
+                'view': self
+            }
+        )
+        return self.get_paginated_response(serializer.data)
 
 
 class SelfUserView(views.APIView):

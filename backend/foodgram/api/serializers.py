@@ -7,7 +7,7 @@ from djoser.serializers import (CurrentPasswordSerializer, PasswordSerializer,
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, Recipe, RecipeIngredients, Tag
 from rest_framework import serializers
-from users.models import Subscription, User
+from users.models import User
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -21,6 +21,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         )
 
     def validate_username(self, value):
+        # это уведомление фронтенд выводит
         if value == 'me':
             raise serializers.ValidationError(
                 'Unable to create user with username me.'
@@ -53,6 +54,33 @@ class CustomSetPasswordRetypeSerializer(
     """Custom serializer to change current user's password."""
 
     pass
+
+
+class SubscriptionSerializer(CustomUserSerializer):
+    """Serializer to subscribe to other recipe authors."""
+
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'email', 'id', 'username', 'first_name', 'last_name',
+            'is_subscribed',  'recipes', 'recipes_count',
+        )
+        depth = 1
+
+    def get_recipes(self, obj):
+        recipes_limit = self.context.get('request').GET.get('recipes_limit')
+        if recipes_limit:
+            recipes = obj.recipes.all()[:int(recipes_limit)]
+        else:
+            recipes = obj.recipes.all()
+        return RecipeInSubscriptionSerializer(
+            recipes, many=True, read_only=True).data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -136,32 +164,33 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(RecipeSerializer):
-    """Serializer for creating and updatind recipes."""
+    """Serializer for creating and updating recipes."""
 
     tags = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Tag.objects.all())
     ingredients = RecipeCreateIngredientsSerializer(
         source='recipeingredients', many=True)
 
-    class Meta:
-        model = Recipe
-        fields = (
-            'id', 'tags', 'author', 'ingredients', 'is_favorited',
-            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
-        )
+#    class Meta:
+#        model = Recipe
+#        fields = (
+#            'id', 'tags', 'author', 'ingredients', 'is_favorited',
+#            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
+#        )
 #        extra_kwargs = {field:{'required': True} for field in fields}
-        extra_kwargs = {
-            'tags': {'required': True},
-            'ingredients': {'required': True},
-            'name': {'required': True},
-            'image': {'required': True},
-            'text': {'required': True},
-            'cooking_time': {'required': True},
-        }
+#        extra_kwargs = {
+#            'tags': {'required': True},
+#            'ingredients': {'required': True},
+#            'name': {'required': True},
+#            'image': {'required': True},
+#            'text': {'required': True},
+#            'cooking_time': {'required': True},
+#        }
 
     def validate(self, attrs):
         if self._kwargs['context']['request']._request.method == 'POST':
             user = self.context.get('request').user
+            # эту ошибку фронтенд выводит
             if Recipe.objects.filter(name=attrs['name'], author=user).exists():
                 raise serializers.ValidationError(
                     'You already have a recipe with that name.'
@@ -185,6 +214,7 @@ class RecipeCreateSerializer(RecipeSerializer):
 
     def validate_ingredients(self, value):
         ingredients_ids = [ingredient['ingredient'].id for ingredient in value]
+        # фронтенд не выводит этот error
         if len(ingredients_ids) != len(set(ingredients_ids)):
             raise serializers.ValidationError(
                 'Unable to add the same ingredient multiple times.'
@@ -241,6 +271,14 @@ class RecipeCreateSerializer(RecipeSerializer):
             tag_list.append(serialized_tag)
         repr['tags'] = tag_list
         return repr
+
+
+class RecipeInSubscriptionSerializer(serializers.ModelSerializer):
+    """Serializer for displaying recipes on the subscriptions page."""
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
 
 # сейчас через админку можно добавить в favorites один и тот же рецепт
 # много раз (запрещено по спеке, наверно стоит запретить на уровне модели БД),
