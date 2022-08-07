@@ -76,7 +76,7 @@ class SubscriptionSerializer(CustomUserSerializer):
             recipes = obj.recipes.all()[:int(recipes_limit)]
         else:
             recipes = obj.recipes.all()
-        return RecipeInSubscriptionSerializer(
+        return RecipeLightSerializer(
             recipes, many=True, read_only=True).data
 
     def get_recipes_count(self, obj):
@@ -273,7 +273,7 @@ class RecipeCreateSerializer(RecipeSerializer):
         return repr
 
 
-class RecipeInSubscriptionSerializer(serializers.ModelSerializer):
+class RecipeLightSerializer(serializers.ModelSerializer):
     """Serializer for displaying recipes on the subscriptions page."""
 
     class Meta:

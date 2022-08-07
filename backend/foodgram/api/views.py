@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as rf_filters
-from recipes.models import Ingredient, Recipe, Tag
+from recipes.models import Favorite, Ingredient, Recipe, Tag
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -11,8 +11,8 @@ from .permissions import IsAuthorOrReadOnly
 from .serializers import (CustomSetPasswordRetypeSerializer,
                           CustomUserCreateSerializer, CustomUserSerializer,
                           IngredientSerializer, RecipeCreateSerializer,
-                          RecipeSerializer, SubscriptionSerializer,
-                          TagSerializer)
+                          RecipeLightSerializer, RecipeSerializer,
+                          SubscriptionSerializer, TagSerializer)
 
 
 class UserViewSet(
@@ -162,3 +162,35 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if self.action in ['create', 'update', 'partial_update']:
             return RecipeCreateSerializer
         return RecipeSerializer
+
+    @action(
+        methods=['post', 'delete'],
+        detail=True,
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def favorite(self, request, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+        favorite = Favorite.objects.filter(recipe=recipe, user=request.user)
+        if request.method == 'DELETE' and not favorite:
+            return Response(
+                {"errors": "This recipe was not on your list."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if request.method == 'DELETE':
+            favorite.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        if favorite:
+            return Response(
+                {"errors": 'This recipe was already on your list.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        Favorite.objects.create(user=request.user, recipe=recipe)
+        serializer = RecipeLightSerializer(
+            recipe,
+            context={
+                'request': request,
+                'format': self.format_kwarg,
+                'view': self
+            }
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
