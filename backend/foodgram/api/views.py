@@ -4,6 +4,10 @@ from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as rf_filters
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredients,
                             ShoppingCart, Tag)
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfbase.pdfmetrics import registerFont
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -217,13 +221,30 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).values(
             'ingredient__name', 'ingredient__measurement_unit'
             ).annotate(total=Sum('amount')).order_by('ingredient')
+
         shopping_list = []
         for ingredient in cart:
             name = ingredient['ingredient__name']
             unit = ingredient['ingredient__measurement_unit']
             total = ingredient['total']
-            line = u'\u2022' + f' {name} - {total} {unit}\n'
+            line = u'\u2022' + f' {name} - {total} {unit}'
             shopping_list.append(line)
-        response = HttpResponse(content_type='shopping_list/pdf')
-        response.writelines(shopping_list)
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="shopping.pdf"'
+        paper_sheet = canvas.Canvas(response, pagesize=A4)
+        registerFont(TTFont('FreeSans', 'FreeSans.ttf'))
+        paper_sheet.setFont('FreeSans', 20)
+        paper_sheet.drawString(100, 770, 'Список покупок')
+        paper_sheet.setFont('FreeSans', 15)
+        y_coordinate = 740
+        for line_id in range(len(shopping_list)):
+            paper_sheet.drawString(80, y_coordinate, shopping_list[line_id])
+            y_coordinate -= line_id + 20
+            if y_coordinate <= 100:
+                paper_sheet.showPage()
+                y_coordinate = 740
+                paper_sheet.setFont('FreeSans', 15)
+        paper_sheet.showPage()
+        paper_sheet.save()
         return response
