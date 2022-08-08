@@ -195,18 +195,14 @@ class RecipeCreateSerializer(RecipeSerializer):
                 raise serializers.ValidationError(
                     'You already have a recipe with that name.'
                 )
-        # работает, выводит то самое сообщение, которое ниже,
-        # но из-за этого при редактировании рецепта приходится заново грузить
-        # ту же самую картинку, что неудобно (может я вообще с другого компа
-        # зашла, и там у меня нет этой картинки), поэтому закомментировала
 
-        # mandatory_fields = [
-        #     'tags', 'ingredients', 'name', 'image', 'text', 'cooking_time']
-        # for field_name in mandatory_fields:
-        #     if field_name not in self._kwargs['data']:
-        #         raise serializers.ValidationError(
-        #             f'The field {field_name} is required.'
-        #         )
+        mandatory_fields = [
+            'tags', 'ingredients', 'name', 'image', 'text', 'cooking_time']
+        for field_name in mandatory_fields:
+            if field_name not in self._kwargs['data']:
+                raise serializers.ValidationError(
+                    f'The field {field_name} is required.'
+                )
         return attrs
 
     def validate_tags(self, value):
