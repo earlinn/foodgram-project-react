@@ -1,6 +1,9 @@
+from django.db.models import Sum
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as rf_filters
-from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredients,
+                            ShoppingCart, Tag)
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -22,7 +25,6 @@ class UserViewSet(
     """Viewset for users registration and displaying."""
 
     queryset = User.objects.all()
-    serializer_class = CustomUserSerializer
     permission_classes = [permissions.AllowAny]
 
     def get_serializer_class(self):
@@ -145,8 +147,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     """Viewset for recipes."""
 
+    http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
     filter_backends = [rf_filters.DjangoFilterBackend]
@@ -159,7 +161,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
+        if self.action in ['create', 'partial_update']:
             return RecipeCreateSerializer
         return RecipeSerializer
 
@@ -208,4 +210,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, id=pk)
         return self.create_delete_or_scold(ShoppingCart, recipe, request)
 
-# сделать эндпойнт http://localhost/api/recipes/download_shopping_cart/
+    @action(detail=False, permission_classes=[permissions.IsAuthenticated])
+    def download_shopping_cart(self, request):
+        cart = RecipeIngredients.objects.filter(
+            recipe__shopping__user=request.user
+        ).values(
+            'ingredient__name', 'ingredient__measurement_unit'
+            ).annotate(total=Sum('amount')).order_by('ingredient')
+        shopping_list = []
+        for ingredient in cart:
+            name = ingredient['ingredient__name']
+            unit = ingredient['ingredient__measurement_unit']
+            total = ingredient['total']
+            line = u'\u2022' + f' {name} - {total} {unit}\n'
+            shopping_list.append(line)
+        response = HttpResponse(content_type='shopping_list/pdf')
+        response.writelines(shopping_list)
+        return response
