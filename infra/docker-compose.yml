@@ -24,6 +24,7 @@ services:
     volumes:
       - static_value:/app/static_backend/
       - media_value:/app/media/
+      - dump_value:/app/dump
     depends_on:
       - db
     env_file:
@@ -45,3 +46,4 @@ volumes:
   postgres_data:
   static_value:
   media_value:
+  dump_value:

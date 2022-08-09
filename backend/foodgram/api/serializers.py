@@ -21,7 +21,6 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         )
 
     def validate_username(self, value):
-        # это уведомление фронтенд выводит
         if value == 'me':
             raise serializers.ValidationError(
                 'Unable to create user with username me.'
@@ -171,30 +170,25 @@ class RecipeCreateSerializer(RecipeSerializer):
     ingredients = RecipeCreateIngredientsSerializer(
         source='recipeingredients', many=True)
 
-#    class Meta:
-#        model = Recipe
-#        fields = (
-#            'id', 'tags', 'author', 'ingredients', 'is_favorited',
-#            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
-#        )
-#        extra_kwargs = {field:{'required': True} for field in fields}
-#        extra_kwargs = {
-#            'tags': {'required': True},
-#            'ingredients': {'required': True},
-#            'name': {'required': True},
-#            'image': {'required': True},
-#            'text': {'required': True},
-#            'cooking_time': {'required': True},
-#        }
-
     def validate(self, attrs):
         if self._kwargs['context']['request']._request.method == 'POST':
             user = self.context.get('request').user
-            # эту ошибку фронтенд выводит
             if Recipe.objects.filter(name=attrs['name'], author=user).exists():
                 raise serializers.ValidationError(
                     'You already have a recipe with that name.'
                 )
+
+        if len(attrs['tags']) > len(set(attrs['tags'])):
+            raise serializers.ValidationError(
+                'Unable to add the same tag multiple times.'
+            )
+
+        ingredients = [
+            item['ingredient'] for item in attrs['recipeingredients']]
+        if len(ingredients) > len(set(ingredients)):
+            raise serializers.ValidationError(
+                'Unable to add the same ingredient multiple times.'
+            )
 
         mandatory_fields = [
             'tags', 'ingredients', 'name', 'image', 'text', 'cooking_time']
@@ -204,23 +198,6 @@ class RecipeCreateSerializer(RecipeSerializer):
                     f'The field {field_name} is required.'
                 )
         return attrs
-
-    def validate_tags(self, value):
-        tags_names = [tag.name for tag in value]
-        if len(tags_names) != len(set(tags_names)):
-            raise serializers.ValidationError(
-                'Unable to add the same tag multiple times.'
-            )
-        return value
-
-    def validate_ingredients(self, value):
-        ingredients_ids = [ingredient['ingredient'].id for ingredient in value]
-        # фронтенд не выводит этот error!
-        if len(ingredients_ids) != len(set(ingredients_ids)):
-            raise serializers.ValidationError(
-                'Unable to add the same ingredient multiple times.'
-            )
-        return value
 
     @transaction.atomic
     def set_recipe_ingredients(self, recipe, ingredients):
@@ -243,12 +220,8 @@ class RecipeCreateSerializer(RecipeSerializer):
         self.set_recipe_ingredients(recipe, ingredients)
         return recipe
 
-    # при patch-запросе через postman не требует все поля
     @transaction.atomic
     def update(self, instance, validated_data):
-        # if self._kwargs['context']['request']._request.method == 'PATCH':
-        #     self._kwargs['partial'] = False
-        #     print(self._kwargs)
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('recipeingredients')
         instance.ingredients.clear()
@@ -257,10 +230,6 @@ class RecipeCreateSerializer(RecipeSerializer):
         instance.tags.set(tags)
         self.set_recipe_ingredients(instance, ingredients)
         return instance
-
-#    def partial_update(self, request, *args, **kwargs):
-#        kwargs['partial'] = False
-#        return self.update(request, *args, **kwargs)
 
     def to_representation(self, instance):
         repr = super().to_representation(instance)
