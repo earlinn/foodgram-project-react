@@ -171,13 +171,6 @@ class RecipeCreateSerializer(RecipeSerializer):
         source='recipeingredients', many=True)
 
     def validate(self, attrs):
-        if self._kwargs['context']['request']._request.method == 'POST':
-            user = self.context.get('request').user
-            if Recipe.objects.filter(name=attrs['name'], author=user).exists():
-                raise serializers.ValidationError(
-                    'You already have a recipe with that name.'
-                )
-
         if len(attrs['tags']) > len(set(attrs['tags'])):
             raise serializers.ValidationError(
                 'Unable to add the same tag multiple times.'

@@ -136,3 +136,6 @@ static/
 
 # Media folders
 media/
+
+# VSCode stuff
+.vscode
