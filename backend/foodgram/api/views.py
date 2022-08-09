@@ -238,9 +238,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         paper_sheet.drawString(100, 770, 'Список покупок')
         paper_sheet.setFont('FreeSans', 15)
         y_coordinate = 740
-        for line_id in range(len(shopping_list)):
-            paper_sheet.drawString(80, y_coordinate, shopping_list[line_id])
-            y_coordinate -= line_id + 20
+        for ingredient in shopping_list:
+            paper_sheet.drawString(80, y_coordinate, ingredient)
+            y_coordinate -= 20
             if y_coordinate <= 100:
                 paper_sheet.showPage()
                 y_coordinate = 740
