@@ -220,7 +220,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe__shopping__user=request.user
         ).values(
             'ingredient__name', 'ingredient__measurement_unit'
-            ).annotate(total=Sum('amount')).order_by('ingredient')
+        ).annotate(total=Sum('amount')).order_by('ingredient')
 
         shopping_list = []
         for ingredient in cart:
