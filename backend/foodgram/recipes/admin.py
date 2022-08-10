@@ -15,12 +15,17 @@ class RecipeAdmin(admin.ModelAdmin):
     """Class to customize recipes display in admin panel."""
 
     list_display = [
-        'pk', 'name', 'author',
-        'text', 'cooking_time', 'pub_date']
+        'pk', 'name', 'author', 'text', 'cooking_time',
+        'total_favorites', 'pub_date']
     search_fields = ['name', 'author', 'cooking_time', 'text']
-    list_filter = ['pub_date', 'author']
+    readonly_fields = ['total_favorites']
+    list_filter = ['name', 'pub_date', 'author', 'tags']
     empty_value_display = '-empty-'
     inlines = [RecipeIngredientsInline]
+
+    @admin.display(description='Total favorites')
+    def total_favorites(self, obj):
+        return obj.favorites.count()
 
 
 class TagAdmin(admin.ModelAdmin):
