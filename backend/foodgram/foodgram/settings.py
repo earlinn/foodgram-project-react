@@ -33,7 +33,7 @@ DEBUG = False
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost/*",
-    "51.250.27.168"
+    "http://51.250.27.168/*",
 ]
 
 # Application definition
