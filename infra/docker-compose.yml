@@ -2,9 +2,6 @@ version: '3.3'
 services:
 
   frontend:
-#    build:
-#      context: ../frontend
-#      dockerfile: Dockerfile
     image: earlinn/foodgram_frontend:v.01
     volumes:
       - ../frontend/:/app/result_build/
@@ -20,9 +17,6 @@ services:
       - ../.env
 
   web:
-#    build:
-#      context: ../backend/foodgram
-#      dockerfile: Dockerfile
     image: earlinn/foodgram:v.01
     restart: always
     volumes:

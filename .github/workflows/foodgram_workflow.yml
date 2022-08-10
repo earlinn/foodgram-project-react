@@ -64,9 +64,7 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram:v.01
-#            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:v.01
             sudo docker-compose stop
-#            sudo docker-compose rm web frontend
             sudo docker-compose rm web
             touch .env
             echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> .env
