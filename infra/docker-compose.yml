@@ -8,6 +8,7 @@ services:
     image: earlinn/foodgram_frontend:v.01
     volumes:
       - ../frontend/:/app/result_build/
+
   db:
     image: postgres:13.0-alpine
     volumes:
@@ -17,6 +18,7 @@ services:
       - "5432:5432"
     env_file:
       - ../.env
+
   web:
 #    build:
 #      context: ../backend/foodgram
@@ -31,6 +33,7 @@ services:
       - db
     env_file:
       - ../.env
+
   nginx:
     image: nginx:1.19.3
     ports:
