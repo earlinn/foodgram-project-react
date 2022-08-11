@@ -182,7 +182,7 @@ class RecipeCreateSerializer(RecipeSerializer):
             raise serializers.ValidationError(
                 'Unable to add the same ingredient multiple times.'
             )
-        
+
         return attrs
 
     @transaction.atomic
