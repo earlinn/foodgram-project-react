@@ -35,7 +35,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '[::1]',
     'http://foodgram-earlinn.sytes.net/',
-    'foodgram-earlinn.sytes.net/',
+    'foodgram-earlinn.sytes.net',
     '51.250.27.168',
 ]
 CSRF_TRUSTED_ORIGINS = [
