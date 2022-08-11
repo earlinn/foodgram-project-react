@@ -11,6 +11,7 @@ class RecipeIngredientsInline(admin.TabularInline):
     extra = 1
 
 
+@admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     """Class to customize recipes display in admin panel."""
 
@@ -28,6 +29,7 @@ class RecipeAdmin(admin.ModelAdmin):
         return obj.favorites.count()
 
 
+@admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     """Class to customize tags display in admin panel."""
 
@@ -35,6 +37,7 @@ class TagAdmin(admin.ModelAdmin):
     search_fields = ['name', 'color', 'slug']
 
 
+@admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     """Class to customize ingredients display in admin panel."""
 
@@ -44,6 +47,7 @@ class IngredientAdmin(admin.ModelAdmin):
     inlines = [RecipeIngredientsInline]
 
 
+@admin.register(RecipeIngredients)
 class RecipeIngredientsAdmin(admin.ModelAdmin):
     """Class to customize ingredients of recipes display in admin panel."""
 
@@ -52,6 +56,7 @@ class RecipeIngredientsAdmin(admin.ModelAdmin):
     list_filter = ['recipe', 'ingredient']
 
 
+@admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     """Class to customize users' favorite recipes display in admin panel."""
 
@@ -60,17 +65,10 @@ class FavoriteAdmin(admin.ModelAdmin):
     list_filter = ['user', 'recipe']
 
 
+@admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
     """Class to customize users' shopping carts display in admin panel."""
 
     list_display = ['pk', 'user', 'recipe']
     search_fields = ['user', 'recipe']
     list_filter = ['user', 'recipe']
-
-
-admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(Tag, TagAdmin)
-admin.site.register(Ingredient, IngredientAdmin)
-admin.site.register(RecipeIngredients, RecipeIngredientsAdmin)
-admin.site.register(Favorite, FavoriteAdmin)
-admin.site.register(ShoppingCart, ShoppingCartAdmin)
