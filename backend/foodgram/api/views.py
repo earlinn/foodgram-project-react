@@ -216,35 +216,63 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, permission_classes=[permissions.IsAuthenticated])
     def download_shopping_cart(self, request):
-        cart = RecipeIngredients.objects.filter(
-            recipe__shopping__user=request.user
-        ).values(
-            'ingredient__name', 'ingredient__measurement_unit'
-        ).annotate(total=Sum('amount')).order_by('ingredient')
+        header_font_size = 20
+        body_font_size = 15
+        header_left_margin = 100
+        body_left_margin = 80
+        header_height = 770
+        body_first_line_height = 740
+        line_spacing = 20
+        bottom_margin = 100
+        bullet_point_symbol = u'\u2022'
+
+        recipes_ingredients = RecipeIngredients.objects.filter(
+            recipe__shopping__user=request.user).order_by('ingredient')
+        cart = recipes_ingredients.values(
+            'ingredient__name', 'ingredient__measurement_unit',
+        ).annotate(total=Sum('amount'))
 
         shopping_list = []
         for ingredient in cart:
             name = ingredient['ingredient__name']
             unit = ingredient['ingredient__measurement_unit']
             total = ingredient['total']
-            line = u'\u2022' + f' {name} - {total} {unit}'
-            shopping_list.append(line)
+            line = bullet_point_symbol + f' {name} - {total} {unit}'
+            recipes = recipes_ingredients.filter(ingredient__name=name)
+            recipes_names = [
+                (item.recipe.name, item.amount) for item in recipes]
+            shopping_list.append((line, recipes_names))
 
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="shopping.pdf"'
         paper_sheet = canvas.Canvas(response, pagesize=A4)
         registerFont(TTFont('FreeSans', 'FreeSans.ttf'))
-        paper_sheet.setFont('FreeSans', 20)
-        paper_sheet.drawString(100, 770, 'Список покупок')
-        paper_sheet.setFont('FreeSans', 15)
-        y_coordinate = 740
-        for ingredient in shopping_list:
-            paper_sheet.drawString(80, y_coordinate, ingredient)
-            y_coordinate -= 20
-            if y_coordinate <= 100:
+
+        paper_sheet.setFont('FreeSans', header_font_size)
+        paper_sheet.drawString(
+            header_left_margin, header_height, 'Список покупок')
+
+        paper_sheet.setFont('FreeSans', body_font_size)
+        y_coordinate = body_first_line_height
+        for ingredient, recipes_names in shopping_list:
+            paper_sheet.drawString(body_left_margin, y_coordinate, ingredient)
+            y_coordinate -= line_spacing
+
+            for recipe_name in recipes_names:
+                if y_coordinate <= bottom_margin:
+                    paper_sheet.showPage()
+                    y_coordinate = body_first_line_height
+                    paper_sheet.setFont('FreeSans', body_font_size)
+                recipe_line = f'  {recipe_name[0]} ({recipe_name[1]})'
+                paper_sheet.drawString(
+                    body_left_margin, y_coordinate, recipe_line)
+                y_coordinate -= line_spacing
+
+            if y_coordinate <= bottom_margin:
                 paper_sheet.showPage()
-                y_coordinate = 740
-                paper_sheet.setFont('FreeSans', 15)
+                y_coordinate = body_first_line_height
+                paper_sheet.setFont('FreeSans', body_font_size)
+
         paper_sheet.showPage()
         paper_sheet.save()
         return response
