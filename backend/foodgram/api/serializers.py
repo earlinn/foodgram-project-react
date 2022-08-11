@@ -183,15 +183,6 @@ class RecipeCreateSerializer(RecipeSerializer):
                 'Unable to add the same ingredient multiple times.'
             )
 
-        mandatory_fields = [
-            'tags', 'ingredients', 'name', 'image', 'text', 'cooking_time']
-        for field_name in mandatory_fields:
-            if field_name not in self._kwargs['data']:
-                raise serializers.ValidationError(
-                    f'The field {field_name} is required.'
-                )
-        return attrs
-
     @transaction.atomic
     def set_recipe_ingredients(self, recipe, ingredients):
         recipe_ingredients = [
