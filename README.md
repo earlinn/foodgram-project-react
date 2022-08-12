@@ -116,7 +116,7 @@ PostgreSQL, Docker, nginx, gunicorn, flake8, GitHub Actions (CI/CD).
 
 ### Авторы проекта
 
-[Волкова Галина](https://github.com/earlinn) и Яндекс.Практикум(https://practicum.yandex.ru/)
+[Волкова Галина](https://github.com/earlinn) и [Яндекс.Практикум](https://practicum.yandex.ru/)
 
 ### Планы про доработке проекта
 
