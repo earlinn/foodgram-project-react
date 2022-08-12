@@ -39,8 +39,9 @@ ALLOWED_HOSTS = [
     '51.250.27.168',
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost/*",
-    "http://51.250.27.168/*",
+    'http://localhost/*',
+    'http://51.250.27.168/*',
+    'http://foodgram-earlinn.sytes.net/*',
 ]
 
 # Application definition
@@ -132,7 +133,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'UTC'
 
