@@ -118,10 +118,6 @@ PostgreSQL, Docker, nginx, gunicorn, flake8, GitHub Actions (CI/CD).
 
 [Волкова Галина](https://github.com/earlinn) и [Яндекс.Практикум](https://practicum.yandex.ru/)
 
-### Планы про доработке проекта
-
-Сделать шифрование при помощи SSL-сертификата (HTTPS).
-
 ### Посмотреть готовый проект
 
 Проект доступен по адресу: http://foodgram-earlinn.sytes.net/
