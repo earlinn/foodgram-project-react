@@ -120,4 +120,4 @@ PostgreSQL, Docker, nginx, gunicorn, flake8, GitHub Actions (CI/CD).
 
 ### Посмотреть готовый проект
 
-Проект доступен по адресу: http://foodgram-earlinn.sytes.net/
+Проект доступен по адресу: https://foodgram-earlinn.sytes.net/
