@@ -70,6 +70,7 @@ docker-compose exec web python manage.py load_ingredients
 http://localhost/admin/ и создать теги для рецептов, указав для каждого тега 
 его название, цветовой HEX-код (например, #49B64E) и slug (на английском). 
 По этим тегам далее можно будет фильтровать рецепты на страницах сайта.
+Цветовые HEX-коды можно посмотреть тут - https://colorscheme.ru/html-colors.html
 
 ### Остановка контейнеров
 
