@@ -1,56 +1,56 @@
 makemig:
-	python manage.py makemigrations
+	cd backend/foodgram; python3 manage.py makemigrations
 
 migrate:
-	python manage.py migrate
+	cd backend/foodgram; python3 manage.py migrate
 
 createlocalsu:
-	python manage.py createsuperuser --email admin@test.com --username admin -v 3
+	cd backend/foodgram; python3 manage.py createsuperuser --email admin@test.com --username admin -v 3
 
 ingr:
-    python manage.py load_ingredients
+	cd backend/foodgram; python3 manage.py load_ingredients
 
 dumpdb:
-	python manage.py dumpdata > fixtures.jsom
+	cd backend/foodgram; python3 manage.py dumpdata --output fixtures.jsom
 
 loaddb:
-	python manage.py loaddata fixtures.jsom
+	cd backend/foodgram; python3 manage.py loaddata fixtures.jsom
 
 collectstatic:
-	python manage.py collectstatic --no-input
+	cd backend/foodgram; python3 manage.py collectstatic --no-input
 
 start-local:
-    migrate loaddb collectstatic createlocalsu
+	migrate loaddb collectstatic createlocalsu
 
 flake:
 	flake8 --exclude venv,migrations,settings.py
 
 up-compose:
-	docker-compose up -d
+	cd infra; sudo docker-compose up -d
 
 build-compose:
-	docker-compose up -d --build
+	cd infra; sudo docker-compose up -d --build
 
 stop-compose:
-	docker-compose stop
+	cd infra; sudo docker-compose stop
 
 start-compose:
-	docker-compose start
+	cd infra; sudo docker compose start
 
 makemig-compose:
-	docker-compose exec -it web python manage.py makemigrations
+	cd infra; sudo docker-compose exec -it web python manage.py makemigrations
 
 migrate-compose:
-	docker-compose exec -it web python manage.py migrate
+	cd infra; sudo docker-compose exec -it web python manage.py migrate
 
 createlocalsu-compose:
-	docker-compose exec -it web python manage.py createsuperuser --email admin@test.com --username admin -v 3
+	cd infra; sudo docker-compose exec -it web python manage.py createsuperuser --email admin@test.com --username admin -v 3
 
 dumpdb-compose:
-	docker-compose exec -it web python manage.py dumpdata > fixtures.json
+	cd infra; sudo docker-compose exec -it web python manage.py dumpdata --output fixtures.json
 
 loaddb-compose:
-	docker-compose exec -it web python manage.py loaddata fixtures.json
+	cd infra; sudo docker-compose exec -it web python manage.py loaddata fixtures.json
 
 ingr-compose:
-    docker-compose exec -it web python manage.py load_ingredients
+	cd infra; sudo docker-compose exec -it web python manage.py load_ingredients
