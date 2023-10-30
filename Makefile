@@ -26,31 +26,31 @@ flake:
 	flake8 --exclude venv,migrations,settings.py
 
 up-compose:
-	cd infra; sudo docker-compose up -d
+	cd infra; sudo docker compose up -d
 
 build-compose:
-	cd infra; sudo docker-compose up -d --build
+	cd infra; sudo docker compose up -d --build
 
 stop-compose:
-	cd infra; sudo docker-compose stop
+	cd infra; sudo docker compose stop
 
 start-compose:
 	cd infra; sudo docker compose start
 
 makemig-compose:
-	cd infra; sudo docker-compose exec -it web python manage.py makemigrations
+	cd infra; sudo docker compose exec -it web python manage.py makemigrations
 
 migrate-compose:
-	cd infra; sudo docker-compose exec -it web python manage.py migrate
+	cd infra; sudo docker compose exec -it web python manage.py migrate
 
 createlocalsu-compose:
-	cd infra; sudo docker-compose exec -it web python manage.py createsuperuser --email admin@test.com --username admin -v 3
+	cd infra; sudo docker compose exec -it web python manage.py createsuperuser --email admin@test.com --username admin -v 3
 
 dumpdb-compose:
-	cd infra; sudo docker-compose exec -it web python manage.py dumpdata --output fixtures.json
+	cd infra; sudo docker compose exec -it web python manage.py dumpdata --output fixtures.json
 
 loaddb-compose:
-	cd infra; sudo docker-compose exec -it web python manage.py loaddata fixtures.json
+	cd infra; sudo docker compose exec -it web python manage.py loaddata fixtures.json
 
 ingr-compose:
-	cd infra; sudo docker-compose exec -it web python manage.py load_ingredients
+	cd infra; sudo docker compose exec -it web python manage.py load_ingredients
